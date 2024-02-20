@@ -1,6 +1,8 @@
 import * as THREE from "three"
-import fragment from "./shader/fragment.glsl"
-import vertex from "./shader/vertex.glsl"
+import backgroundFragment from "./shader/backgroundFragment.glsl"
+import foregroundFragment from "./shader/foregroundFragment.glsl"
+import backgroundVertex from "./shader/backgroundVertex.glsl"
+import foregroundVertex from "./shader/foregroundVertex.glsl"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
 import gui from "lil-gui"
 import gsap from "gsap"
@@ -65,8 +67,7 @@ export default class Sketch {
   }
 
   addObjects() {
-    let that = this
-    this.material = new THREE.ShaderMaterial({
+    this.backgroundMaterial = new THREE.ShaderMaterial({
       extensions: {
         derivatives: "#extension GL_OES_standard_derivatives : enable",
       },
@@ -80,14 +81,43 @@ export default class Sketch {
       },
       // wireframe: true,
       // transparent: true,
-      vertexShader: vertex,
-      fragmentShader: fragment,
+      vertexShader: backgroundVertex,
+      fragmentShader: backgroundFragment,
     })
 
-    this.geometry = new THREE.SphereGeometry(5, 32, 32)
+    this.backgroundGeometry = new THREE.SphereGeometry(5, 32, 32)
 
-    this.plane = new THREE.Mesh(this.geometry, this.material)
-    this.scene.add(this.plane)
+    this.backgroundSphere = new THREE.Mesh(
+      this.backgroundGeometry,
+      this.backgroundMaterial
+    )
+    this.scene.add(this.backgroundSphere)
+
+    this.foregroundMaterial = new THREE.ShaderMaterial({
+      extensions: {
+        derivatives: "#extension GL_OES_standard_derivatives : enable",
+      },
+      side: THREE.DoubleSide,
+      uniforms: {
+        time: { type: "f", value: 0 },
+        resolution: { type: "v4", value: new THREE.Vector4() },
+        uvRate1: {
+          value: new THREE.Vector2(1, 1),
+        },
+      },
+      // wireframe: true,
+      // transparent: true,
+      vertexShader: foregroundVertex,
+      fragmentShader: foregroundFragment,
+    })
+
+    this.foregroundGeometry = new THREE.SphereGeometry(0.4, 32, 32)
+
+    this.foregroundSphere = new THREE.Mesh(
+      this.foregroundGeometry,
+      this.foregroundMaterial
+    )
+    this.scene.add(this.foregroundSphere)
   }
 
   stop() {
@@ -103,8 +133,9 @@ export default class Sketch {
 
   render() {
     if (!this.isPlaying) return
-    this.time += 0.05
-    this.material.uniforms.time.value = this.time
+    this.time += 0.01
+    this.foregroundMaterial.uniforms.time.value = this.time
+    this.backgroundMaterial.uniforms.time.value = this.time
     requestAnimationFrame(this.render.bind(this))
     this.renderer.render(this.scene, this.camera)
   }
