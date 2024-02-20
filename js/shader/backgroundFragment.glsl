@@ -2,6 +2,7 @@ uniform float time;
 uniform float progress;
 uniform sampler2D texture1;
 uniform vec4 resolution;
+uniform float uZoom;
 varying vec2 vUv;
 varying vec3 vPosition;
 float PI = 3.141592653589793238;
@@ -37,10 +38,10 @@ float noise(vec3 p){
 float lines(vec2 uv, float offset) {
 	//return abs(sin(uv.x * 5.0));
     // when the offset is 0 its going to 0.5 when offset is 1.0 it needs to be 1
-    return smoothstep(
-        0., 0.5 + offset*0.5, 
-        abs(0.5*(sin(uv.x * 15.) + offset*2.))
-    );
+	return smoothstep(
+		0., 0.5 + offset*0.5,
+		0.5*abs((sin(uv.x*10.) + offset*2.))
+	);
 }
 
 
@@ -50,14 +51,14 @@ mat2 rotate2D(float angle){
 }
 
 void main()	{
-    float newNoise = noise(vPosition + time);
-
+    float newNoise = noise(vPosition / 2.5 + time);
+                                                          
 	vec3 accentColor = vec3(.0, 0.,0.);
     vec3 color1 = vec3(120./255., 158./255.,113./255.);
     vec3 color2 = vec3(224./255., 148./255.,66./255.);
     vec3 color3 = vec3(232./255., 201./255.,73./255.);
 
-	vec2 baseUv = rotate2D(newNoise) * vPosition.xy * 0.1;
+	vec2 baseUv = rotate2D(newNoise) * vPosition.xy * uZoom;
 	float basePattern = lines(baseUv, 0.5);
 	float secondPattern = lines(baseUv, 0.1);
 
